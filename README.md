@@ -1,3 +1,26 @@
+# Tool郡，事前準備テクニック
+
+- nginx log analyser
+  - alp
+  - kataribe
+
+  > kataribe は query parameter で分けてみれるのでkataribeの方がいい
+
+- Resources monitor
+  - netdata
+    - CPU 使用率が低ければ，pm2 や unicorn, nginx などの worker を増やす
+    - メモリ使用率が低ければ mysql の query cache などの容量を増やす
+
+- mysql
+  - slow query
+  - query cache
+
+- `/var/log` を nginx で /log に mount
+
+- deploy script
+
+- localへ環境構築
+
 # Resize image
 
 ```bash
