@@ -6,7 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const mimes = require('mime-types')
-const mysql = require('mysql')
+const mysql = require('mysql2')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const cp = require('child_process')
@@ -32,44 +32,6 @@ app.set('db', db)
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
-
-app.get('/dx/:dx/dy/:dy/:imagePath', async (req, res, next) => {
-  const { dx, dy, imagePath } = req.params
-
-  // Number にキャストできないなら例外
-  // if (+dx !== +dx || +dy !== +dy) {
-  //   next(new Error('画像を変換できません'))
-  //   return
-  // }
-
-  // const p = path.parse(imagePath)
-  // if (
-  //   p.ext !== '.jpg' &&
-  //   p.ext !== '.jpeg' &&
-  //   p.ext !== '.gif' &&
-  //   p.ext !== '.png' &&
-  //   p.ext !== '.webp'
-  // ) {
-  //   next(new Error('画像を変換できません'))
-  //   return
-  // }
-
-  res.sendFile(path.resolve(`../uploads/${dx}x${dy}_${imagePath}`))
-})
-
-app.use('/stylesheets/:css', async (req, res, next) => {
-  const css = await readFile(path.resolve('../public/stylesheets/', req.params.css))
-  res.setHeader('Content-Type', 'text/css')
-  res.end(css)
-  next()
-})
-
-app.use('/js/:js', async (req, res, next) => {
-  const js = await readFile(path.resolve('../public/js/', req.params.js))
-  res.setHeader('Content-Type', 'application/js')
-  res.end(js)
-  next()
-})
 
 app.use(async (req, res, next) => {
   const query = promisify(db.query.bind(db))
