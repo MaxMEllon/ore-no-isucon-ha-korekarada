@@ -21,6 +21,16 @@
 
 - localへ環境構築
 
+# あからさまなボトルネック
+
+- N + 1 query
+- child process
+- O(n^3)
+
+# もしかするとボトルネック
+
+- RegExp
+
 # Resize image
 
 ```bash
@@ -75,6 +85,11 @@ ETag や Last-Modified をブラウザが覚えておき，ブラウザが保有
 使えるかどうかをサーバー側に問い合わせ
 GETリクエストは発生するので注意
 （ETagの照合や，ファイル変更の確認の問い合わせが発生，302が帰ってくる）
+
+# CDNを意識した Hard Cache
+
+モダンなブラウザでは，Cache-Control で max-age を指定するだけでもcacheがしっかりと効く
+ただ，CDNのようなものがコンテンツを取得する際は，**public** をしっかりと明記する必要がある
 
 # Session (mysql -> redis)
 
