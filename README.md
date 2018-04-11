@@ -28,6 +28,21 @@ location ~ (\.jpeg$|\.png$|\.gif$) {
 }
 ```
 
+# Hard Cache と Soft Cache の違い
+
+- Hard Cache
+
+コンテンツをクライアントサイドでcacheする期間をサーバー側でヘッターを通して指定．
+静的コンテンツの取得時に GET リクエストがサーバーに投げられなくなる
+(擬似的に200を返却，cache form diskとなり，サーバーにはアクセスが発生しない)
+
+- Soft Cache
+
+ETag や Last-Modified をブラウザが覚えておき，ブラウザが保有しているcacheが
+使えるかどうかをサーバー側に問い合わせ
+GETリクエストは発生するので注意
+（ETagの照合や，ファイル変更の確認の問い合わせが発生，302が帰ってくる）
+
 # Session (mysql -> redis)
 
 ```diff
@@ -159,3 +174,5 @@ index 17bab60..dadc29b 100644
 
      res.cookie('session_id', sessionId)
 ```
+
+
