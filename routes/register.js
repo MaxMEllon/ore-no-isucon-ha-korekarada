@@ -79,11 +79,8 @@ router.post('/', uploads.single('icon'), async (req, res, next) => {
       [username, salt, hash, last_name, first_name, filename]
     )
     const sessionId = uuid()
-    await query('INSERT INTO session (id, username, expired_at) VALUES (?, ?, ?)', [
-      sessionId,
-      username,
-      Number.parseInt(Date.now() / 1000 + 300)
-    ])
+    res.cookie('session_id', sessionId)
+    await redis.setAsync(`session:${sessionId}`, username)
     await connection.commit()
 
     res.cookie('session_id', sessionId)

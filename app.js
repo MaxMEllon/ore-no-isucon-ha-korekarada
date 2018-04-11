@@ -6,10 +6,19 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const mimes = require('mime-types')
+const bluebird = require('bluebird')
 const mysql = require('mysql2')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const cp = require('child_process')
+const Redis = require('redis')
+
+bluebird.promisifyAll(Redis.RedisClient.prototype)
+bluebird.promisifyAll(Redis.Multi.prototype)
+
+global.redis = Redis.createClient()
+global.Promise = bluebird
+
 const app = express()
 const readFile = promisify(fs.readFile)
 const execFile = promisify(cp.execFile)
@@ -36,26 +45,16 @@ app.use(cookieParser())
 app.use(async (req, res, next) => {
   const query = promisify(db.query.bind(db))
   const sessionId = req.cookies.session_id
-  try {
-    if (sessionId) {
-      const [session] = await query('SELECT * FROM session WHERE id=?', [sessionId])
-      if (session) {
-        if (session.expired_at > Date.now() / 1000) {
-          const [user] = await query('SELECT * FROM users WHERE username=?', [session.username])
-          await query('UPDATE session SET expired_at=? WHERE id=?', [
-            Number.parseInt(Date.now() / 1000 + 300),
-            sessionId
-          ])
-          req.user = user
-        } else {
-          await query('DELETE FROM session WHERE id=?', [sessionId])
-        }
-      }
+  if (sessionId) {
+    const username = await redis.getAsync(`session:${sessionId}`)
+    if (username) {
+      const [user] = await query('SELECT * FROM users WHERE username=?', [username])
+      req.user = user
+    } else {
+      await redis.delAsync(`session:${sessionId}`)
     }
-    next()
-  } catch (e) {
-    next(e)
   }
+  next()
 })
 
 const index = require('./routes/index')
@@ -68,12 +67,8 @@ const reservations = require('./routes/reservations')
 app.use('/', index)
 app.use('/initialize', async (req, res, next) => {
   try {
-    await exec(
-      `mysql -h ${process.env.RISUCON_DB_HOST || 'localhost'} -u${process.env.RISUCON_DB_USER ||
-        'root'} ${
-        process.env.RISUCON_DB_PASSWORD ? '-p' + process.env.RISUCON_DB_PASSWORD : ''
-      } ${process.env.RISUCON_DB_NAME || 'risukai'} < ${path.resolve('../sql/01_tables_data.sql')}`
-    )
+    await exec(`mysql -uroot -Drisukai < sql/01_tables_data.sql`)
+    await redis.flushdbAsync()
     res.send('OK')
   } catch (e) {
     next(e)

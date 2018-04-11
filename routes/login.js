@@ -37,12 +37,9 @@ router.post('/', async (req, res, next) => {
     }
 
     const sessionId = uuid()
-    await query(
-      'INSERT INTO session (id, username, expired_at) VALUES (?, ?, ?) on duplicate key update username=?',
-      [sessionId, username, Date.now() / 1000 + 300, username]
-    )
-    await connection.commit()
     res.cookie('session_id', sessionId)
+    await redis.setAsync(`session:${sessionId}`, user.username)
+    await connection.commit()
     res.redirect('/')
   } catch (e) {
     console.error(e)

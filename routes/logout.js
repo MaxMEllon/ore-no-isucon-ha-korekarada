@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
       res.redirect('/')
       return
     }
-    await query('DELETE FROM session WHERE id=?', [sessionId])
+    await redis.delAsync(`session:${sessionId}`)
     res.clearCookie('session_id')
     res.redirect('/')
   } catch (e) {
